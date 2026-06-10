@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>天地通 · 设备部署规划</title>
+<style>
+* { box-sizing: border-box; }
+html,body{margin:0;padding:0;overflow:hidden;background:#0d1b2a;font-family:"Microsoft YaHei","PingFang SC",sans-serif;}
+#c{display:block;position:fixed;inset:0;width:100vw;height:100vh;}
+
+/* 毛玻璃面板 */
+.panel{
+  position:fixed;z-index:20;
+  background:rgba(8,20,40,.88);
+  border:1px solid rgba(80,160,255,.3);
+  border-radius:14px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  color:#d8eeff;
+}
+
+/* 顶部控制栏 */
+#topbar{
+  top:18px;left:50%;transform:translateX(-50%);
+  padding:12px 20px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;white-space:nowrap;
+}
+
+/* 按钮 */
+.btn{
+  cursor:pointer;padding:7px 16px;border-radius:8px;
+  background:rgba(20,50,90,.8);
+  border:1px solid rgba(60,130,220,.4);
+  color:#a8ccee;font-size:13px;font-weight:500;
+  transition:all .18s ease;user-select:none;
+  white-space:nowrap;
+}
+.btn:hover{
+  background:rgba(30,70,130,.9);
+  border-color:rgba(80,170,255,.7);
+  color:#d0eeff;
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(30,100,255,.25);
+}
+.btn.active{
+  background:linear-gradient(135deg,#ff9a2e 0%,#e06810 100%);
+  border-color:#ffb366;
+  color:#1a0d00;font-weight:700;
+  box-shadow:0 4px 20px rgba(255,130,30,.4);
+}
+.btn.active:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,130,30,.5);}
+.btn.sm{padding:5px 12px;font-size:12px;}
+
+/* 左侧信息面板 */
+#sidebar{
+  top:18px;left:18px;width:230px;
+  padding:16px 18px;
+}
+.t1{
+  font-size:15px;font-weight:700;
+  color:#ffd89a;
+  margin:0 0 10px 0;
+  padding:0 0 8px 0;
+  border-bottom:1px solid rgba(255,216,154,.25);
+  letter-spacing:.5px;
+}
+.info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0;font-size:13px;
+}
+.info-row span{color:#90b8d8;}
+.info-row b{color:#c8e8ff;font-weight:500;}
+.info-row b.gold{color:#ffd89a;font-weight:700;font-size:15px;}
+.info-row b.green{color:#7de8a8;font-weight:700;}
+.info-row b.blue{color:#80c8ff;font-weight:700;}
+.tips{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid rgba(80,160,255,.2);
+  font-size:11.5px;color:#6a90b8;line-height:1.9;
+}
+.tips b{color:#9ac0e0;}
+
+/* 右侧造价计算器 */
+#calcbar{
+  top:18px;right:18px;width:290px;
+  padding:16px 18px;
+}
+.t2{
+  font-size:15px;font-weight:700;
+  color:#7de8a8;
+  margin:0 0 10px 0;
+  padding:0 0 8px 0;
+  border-bottom:1px solid rgba(125,232,168,.25);
+}
+.calc-row{
+  display:flex;align-items:center;gap:8px;
+  margin:8px 0;
+}
+.calc-row label{min-width:70px;color:#90b8d8;font-size:13px;}
+.calc-row select,.calc-row input{
+  flex:1;background:rgba(10,25,50,.9);
+  border:1px solid rgba(60,130,220,.4);
+  color:#d8eeff;padding:6px 10px;
+  border-radius:8px;font-size:13px;
+  font-family:inherit;
+  outline:none;
+}
+.calc-row select:focus,.calc-row input:focus{
+  border-color:rgba(80,170,255,.7);
+  box-shadow:0 0 0 2px rgba(80,170,255,.15);
+}
+.result-box{
+  margin-top:12px;padding:12px 14px;
+  background:rgba(10,40,25,.7);
+  border:1px solid rgba(100,220,150,.3);
+  border-radius:12px;
+}
+.result-box .label{font-size:12px;color:#5aaa78;margin-bottom:4px;}
+.result-box .big{font-size:26px;font-weight:700;color:#7de8a8;letter-spacing:.5px;line-height:1.2;}
+.result-box .sub{margin-top:8px;font-size:12px;color:#5aaa78;line-height:1.8;}
+
+/* 底部尺寸标注 */
+#dimOverlay{
+  bottom:28px;left:50%;transform:translateX(-50%);
+  padding:14px 28px;
+  display:flex;gap:40px;align-items:center;
+  border-color:rgba(255,216,154,.6);
+  box-shadow:0 10px 40px rgba(0,0,0,.7),0 0 30px rgba(255,180,50,.1);
+  border-width:1px;
+  background:rgba(10,25,50,.92);
+}
+.dim-box{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.dim-box .lbl{font-size:9px;color:#80b0d0;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
+.dim-box .val{font-size:24px;font-weight:700;color:#ffd89a;text-shadow:0 0 15px rgba(255,216,154,.4);letter-spacing:1px;line-height:1;}
+.dim-sep{width:2px;height:35px;background:linear-gradient(180deg,rgba(255,216,154,.7),rgba(255,216,154,.2));border-radius:1px;}
+
+/* 底部提示 */
+#bottombar{
+  bottom:18px;left:50%;transform:translateX(-50%);
+  padding:8px 18px;
+  font-size:12px;color:#4a7090;
+  border-color:rgba(60,100,140,.2);
+}
+
+/* 坐标面板 */
+#coords{
+  bottom:110px;left:50%;transform:translateX(-50%);
+  padding:8px 20px;font-size:12px;
+  border-color:rgba(80,160,255,.2);
+  color:#7090b0;line-height:1.8;max-width:90vw;overflow:hidden;
+  white-space:nowrap;
+}
+#coords b{color:#ffd89a;font-weight:600;}
+#coords span{margin-right:12px;}
+
+/* 图例 */
+.legend{
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(80,160,255,.2);
+  display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;
+  font-size:12px;color:#6a90b8;
+}
+.ld{width:13px;height:13px;border-radius:3px;border:1px solid rgba(255,255,255,.25);display:inline-block;margin-right:4px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- 顶部控制栏 -->
+<div id="topbar" class="panel">
+  <span style="font-size:13px;color:#6a90b8;margin-right:4px;">部署:</span>
+  <button class="btn" data-m="1to6">1托6</button>
+  <button class="btn active" data-m="1to18">1托18</button>
+  <button class="btn" data-m="3g">3组</button>
+  <button class="btn" data-m="6g">6组</button>
+  <button class="btn" data-m="9g">9组</button>
+  <button class="btn" data-m="12g">12组</button>
+  <button class="btn" data-m="20g">20组</button>
+  <div style="width:1px;height:24px;background:rgba(80,160,255,.25);margin:0 4px;"></div>
+  <button class="btn sm" id="signalBtn">📡信号</button>
+  <button class="btn sm" id="resetBtn">↺重置</button>
+</div>
+
+<!-- 左侧信息 -->
+<div id="sidebar" class="panel">
+  <h3 class="t1">★ 天地通设备部署</h3>
+  <div class="info-row"><span>单台覆盖</span><b>≈ 2.6 km²</b></div>
+  <div class="info-row"><span>1托18</span><b>19 台/组</b></div>
+  <div class="info-row" style="border-top:1px solid rgba(80,160,255,.15);margin-top:6px;padding-top:10px;">
+    <span>当前台数</span><b class="blue" id="countLbl">19</b>
+  </div>
+  <div class="info-row">
+    <span>覆盖面积</span><b class="green" id="areaLbl">49.4 km²</b>
+  </div>
+  <div class="info-row">
+    <span>总造价</span><b class="gold" id="priceLbl">38 万元</b>
+  </div>
+  <div class="info-row" style="border-top:1px solid rgba(80,160,255,.15);margin-top:6px;padding-top:10px;">
+    <span>覆盖范围</span><b class="gold" id="dimLbl">-- × --</b>
+  </div>
+  <div class="info-row">
+    <span>设备组数</span><b id="groupLbl">1</b>
+  </div>
+  <div class="tips">
+    <b>左键</b>旋转 · <b>滚轮</b>缩放 · <b>右键</b>平移<br>
+    <b>拖拽</b>组中心设备 → 移动布局<br>
+    每组最多 <b style="color:#ffb060;">1托18 (19台)</b>
+  </div>
+  <div class="legend">
+    <span><span class="ld" style="background:#ff9a2e;"></span>主组中心</span>
+    <span><span class="ld" style="background:#9060c8;"></span>副组中心</span>
+    <span><span class="ld" style="background:#27609e;"></span>从设备</span>
+    <span><span class="ld" style="background:#2e5580;opacity:.7;"></span>空白格</span>
+  </div>
+</div>
+
+<!-- 右侧造价计算器 -->
+<div id="calcbar" class="panel">
+  <h3 class="t2">¥ 面积 & 造价计算器</h3>
+  <div class="calc-row">
+    <label>组网模式</label>
+    <select id="calcMode">
+      <option value="1to18" selected>1托18 (19台/组)</option>
+      <option value="1to6">1托6 (7台/组)</option>
+    </select>
+  </div>
+  <div class="calc-row">
+    <label>建设组数</label>
+    <input id="calcGroups" type="number" min="1" value="1" />
+  </div>
+  <div class="calc-row">
+    <label>单台造价</label>
+    <input id="calcPrice" type="number" min="0" step="0.1" value="2" />
+  </div>
+  <div class="result-box">
+    <div class="label">可覆盖最大面积</div>
+    <div class="big" id="resArea">49.40 km²</div>
+    <div class="sub">
+      总台数: <b id="resDevices" style="color:#c8e8ff;">19</b> 台<br>
+      总造价: <b id="resPrice" style="color:#ffd89a;">38.0</b> 万元<br>
+      ≈ <b id="resPriceYuan" style="color:#ffd89a;">¥ 380,000</b>
+    </div>
+  </div>
+</div>
+
+<!-- 底部尺寸标注 -->
+<div id="dimOverlay" class="panel">
+  <div class="dim-box">
+    <span class="lbl">WIDTH</span>
+    <span class="val" id="dimW">--</span>
+  </div>
+  <div class="dim-sep"></div>
+  <div class="dim-box">
+    <span class="lbl">LENGTH</span>
+    <span class="val" id="dimH">--</span>
+  </div>
+</div>
+
+<!-- 坐标面板 -->
+<div id="coords" class="panel" style="display:none;"></div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+
+<script>
+'use strict';
+var MODE = {
+  '1to6':  { ring:1, outer:3, groups:[{q:0,r:0,n:'G1'}] },
+  '1to18': { ring:2, outer:4, groups:[{q:0,r:0,n:'G1'}] },
+  '3g':    { ring:2, outer:2, groups:[{q:-4,r:2,n:'G1'},{q:1,r:-1,n:'G2'},{q:6,r:-4,n:'G3'}] },
+  '6g':    { ring:2, outer:2, groups:[{q:-4,r:2,n:'G1'},{q:1,r:-1,n:'G2'},{q:6,r:-4,n:'G3'},{q:-2,r:-3,n:'G4'},{q:3,r:-6,n:'G5'},{q:8,r:-9,n:'G6'}] },
+  '9g':    { ring:2, outer:2, groups:[{q:-4,r:2,n:'G1'},{q:1,r:-1,n:'G2'},{q:6,r:-4,n:'G3'},{q:-2,r:-3,n:'G4'},{q:3,r:-6,n:'G5'},{q:8,r:-9,n:'G6'},{q:0,r:-8,n:'G7'},{q:5,r:-11,n:'G8'},{q:10,r:-14,n:'G9'}] },
+  '12g':   { ring:2, outer:2, groups:[{q:-4,r:2,n:'G1'},{q:1,r:-1,n:'G2'},{q:6,r:-4,n:'G3'},{q:-2,r:-3,n:'G4'},{q:3,r:-6,n:'G5'},{q:8,r:-9,n:'G6'},{q:0,r:-8,n:'G7'},{q:5,r:-11,n:'G8'},{q:10,r:-14,n:'G9'},{q:2,r:-13,n:'G10'},{q:7,r:-16,n:'G11'},{q:12,r:-19,n:'G12'}] },
+  '20g':   { ring:2, outer:2, groups:[
+    {q:-4,r:2,n:'G1'},{q:1,r:-1,n:'G2'},{q:6,r:-4,n:'G3'},{q:11,r:-7,n:'G4'},{q:16,r:-10,n:'G5'},
+    {q:-2,r:-3,n:'G6'},{q:3,r:-6,n:'G7'},{q:8,r:-9,n:'G8'},{q:13,r:-12,n:'G9'},{q:18,r:-15,n:'G10'},
+    {q:0,r:-8,n:'G11'},{q:5,r:-11,n:'G12'},{q:10,r:-14,n:'G13'},{q:15,r:-17,n:'G14'},{q:20,r:-20,n:'G15'},
+    {q:2,r:-13,n:'G16'},{q:7,r:-16,n:'G17'},{q:12,r:-19,n:'G18'},{q:17,r:-22,n:'G19'},{q:22,r:-25,n:'G20'}
+  ]}
+};
+var BACKUP = JSON.parse(JSON.stringify(MODE));
+var HEX = 3.0, HX = Math.sqrt(3)*HEX, HY = 1.5*HEX;
+var signalOn = true, curMode = '1to18';
+
+var scene, cam, rend, ctrl, root, ray, pointer, dragging = null, signalRings = [];
+var dimLines = [], dimSprites = [];
+var cvs = document.getElementById('c');
+
+function hexPos(q, r) { return {x: HEX*(3/2*q), z: HEX*(Math.sqrt(3)/2*q + Math.sqrt(3)*r)}; }
+function hexRingD(q, r) { return Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r)); }
+
+function devMat(kind) {
+  var col = kind==='center'?0xff9a2e:kind==='group'?0xa070e0:0x3a80c0;
+  return new THREE.MeshStandardMaterial({color:col, metalness:.35, roughness:.5});
+}
+function darkMat(kind) {
+  var col = kind==='center'?0x8a4d16:kind==='group'?0x5a3580:0x1a3a60;
+  return new THREE.MeshStandardMaterial({color:col, metalness:.25, roughness:.7});
+}
+function hexMat(kind) {
+  var col = kind==='center'?0xe6842c:kind==='group'?0x8b60c8:kind==='slave'?0x336e9c:0x2e5580;
+  return new THREE.MeshStandardMaterial({color:col, transparent:true, opacity:.65, side:THREE.DoubleSide});
+}
+
+function makeDevice(kind) {
+  var g = new THREE.Group();
+  var base = new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.15,0.25,20), darkMat(kind));
+  base.position.y = 0.15; base.castShadow = true; base.receiveShadow = true; g.add(base);
+  var body = new THREE.Mesh(new THREE.BoxGeometry(1.5,1.3,1.5), devMat(kind));
+  body.position.y = 1.05; body.castShadow = true; g.add(body);
+  // 散热鳍片
+  for (var sx=-1; sx<=1; sx+=2) {
+    for (var i=0; i<4; i++) {
+      var fin = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.9,0.22), darkMat(kind));
+      fin.position.set(sx*1.0, 1.05+(i-1.5)*0.22, 0); fin.castShadow = true; g.add(fin);
+    }
+  }
+  var top = new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.95,0.3,20), darkMat(kind));
+  top.position.y = 1.95; top.castShadow = true; g.add(top);
+  var antCol = kind==='center'?0xffd080:0xd0b0ff;
+  var antEm = kind==='center'?0x804000:0x503080;
+  var antMat = new THREE.MeshStandardMaterial({color:antCol, emissive:new THREE.Color(antEm), emissiveIntensity:signalOn?.35:.05});
+  var ant = new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.075,2.0,8), antMat);
+  ant.position.y = 3.15; ant.castShadow = true; g.add(ant);
+  // 4根小天线
+  for (var j=0; j<4; j++) {
+    var a = Math.PI/2*j + Math.PI/4;
+    var sub = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.045,1.1,8), antMat);
+    sub.position.set(Math.cos(a)*0.45, 2.65, Math.sin(a)*0.45); sub.castShadow = true; g.add(sub);
+  }
+  g.userData.kind = kind;
+  return g;
+}
+
+function makeHex(material, scale) {
+  scale = scale || 1.0;
+  var geo = new THREE.CylinderGeometry(HEX*scale, HEX*scale, 0.15, 6);
+  var m = new THREE.Mesh(geo, material);
+  m.rotation.y = Math.PI/2;
+  m.receiveShadow = true;
+  return m;
+}
+
+function signalRing(radius, col) {
+  var geo = new THREE.RingGeometry(radius-0.15, radius, 48);
+  var mat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.55, side:THREE.DoubleSide});
+  var m = new THREE.Mesh(geo, mat);
+  m.rotation.x = -Math.PI/2; m.position.y = 0.15;
+  m.userData.baseR = radius;
+  return m;
+}
+
+function makeSpriteLabel(text, w, h, rotY) {
+  var cv = document.createElement('canvas');
+  cv.width = w||360; cv.height = h||72;
+  var ctx = cv.getContext('2d');
+  ctx.fillStyle = 'rgba(8,20,40,.95)';
+  ctx.roundRect(0,0,cv.width,cv.height,cv.height/2);
+  ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.fillStyle = '#ffeb3b';
+  ctx.font = 'bold 36px Microsoft YaHei';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, cv.width/2, cv.height/2);
+  var tex = new THREE.CanvasTexture(cv);
+  var mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  var sp = new THREE.Sprite(mat);
+  sp.scale.set(rotY ? 22 : 7, 5, 1);
+  return sp;
+}
+
+function clearScene() {
+  while (root.children.length) {
+    var o = root.children.pop();
+    o.traverse(function(c){ if(c.geometry) c.geometry.dispose(); });
+  }
+  signalRings = [];
+  dimLines = [];
+  dimSprites = [];
+}
+
+function calcBounds(cfg) {
+  var outer = cfg.outer;
+  var qMin=Infinity,qMax=-Infinity,rMin=Infinity,rMax=-Infinity;
+  cfg.groups.forEach(function(g) {
+    for (var dq=-outer; dq<=outer; dq++) {
+      for (var dr=-outer; dr<=outer; dr++) {
+        if (hexRingD(dq,dr)>outer) continue;
+        var q=g.q+dq, r=g.r+dr;
+        if(q<qMin) qMin=q; if(q>qMax) qMax=q;
+        if(r<rMin) rMin=r; if(r>rMax) rMax=r;
+      }
+    }
+  });
+  var p1 = hexPos(qMin, rMin);
+  var p2 = hexPos(qMax, rMin);
+  var p3 = hexPos(qMin, rMax);
+  var w = Math.sqrt((p2.x-p1.x)*(p2.x-p1.x)+(p2.z-p1.z)*(p2.z-p1.z)) + HEX*2;
+  var h = Math.sqrt((p3.x-p1.x)*(p3.x-p1.x)+(p3.z-p1.z)*(p3.z-p1.z)) + HEX*2;
+  return {w:w, h:h};
+}
+
+function drawDimLines(cfg, w, h) {
+  var outer = cfg.outer;
+  var qMin=Infinity,qMax=-Infinity,rMin=Infinity,rMax=-Infinity;
+  cfg.groups.forEach(function(g) {
+    for (var dq=-outer; dq<=outer; dq++) {
+      for (var dr=-outer; dr<=outer; dr++) {
+        if (hexRingD(dq,dr)>outer) continue;
+        var q=g.q+dq, r=g.r+dr;
+        if(q<qMin) qMin=q; if(q>qMax) qMax=q;
+        if(r<rMin) rMin=r; if(r>rMax) rMax=r;
+      }
+    }
+  });
+  var bl = hexPos(qMin, rMin);
+  var br = hexPos(qMax, rMin);
+  var tl = hexPos(qMin, rMax);
+  var y = 3.5;
+  var lineMat = new THREE.LineBasicMaterial({color:0xffeb3b, linewidth:3});
+  var pts = [
+    [new THREE.Vector3(bl.x,y,bl.z), new THREE.Vector3(br.x,y,br.z)],
+    [new THREE.Vector3(bl.x,y,bl.z), new THREE.Vector3(tl.x,y,tl.z)]
+  ];
+  pts.forEach(function(pair) {
+    var geo = new THREE.BufferGeometry().setFromPoints(pair);
+    var line = new THREE.Line(geo, lineMat);
+    root.add(line);
+    dimLines.push(line);
+  });
+  var midB = {x:(bl.x+br.x)/2, z:(bl.z+br.z)/2};
+  var midL = {x:(bl.x+tl.x)/2, z:(bl.z+tl.z)/2};
+
+  var wLabel = makeSpriteLabel('宽 ' + w.toFixed(1) + ' km', 320, 56);
+  wLabel.position.set(midB.x, 4.5, midB.z - HEX*1.2);
+  root.add(wLabel); dimSprites.push(wLabel);
+
+  var hLabel = makeSpriteLabel('长 ' + h.toFixed(1) + ' km', 320, 56);
+  hLabel.position.set(midL.x - HEX*2, 4.5, midL.z);
+  root.add(hLabel); dimSprites.push(hLabel);
+}
+
+function build(modeKey) {
+  clearScene();
+  curMode = modeKey;
+  var cfg = MODE[modeKey];
+
+  // 标记组内占用格
+  var occupied = {};
+  cfg.groups.forEach(function(g, gi) {
+    for (var dq=-cfg.ring; dq<=cfg.ring; dq++) {
+      for (var dr=-cfg.ring; dr<=cfg.ring; dr++) {
+        if (hexRingD(dq,dr)>cfg.ring) continue;
+        var q=g.q+dq, r=g.r+dr;
+        var k = q+','+r;
+        if (occupied[k]) continue;
+        var isC = (dq===0 && dr===0);
+        occupied[k] = {kind: isC?(gi===0?'center':'group'):'slave', gi:gi, gn:g.n};
+      }
+    }
+  });
+
+  // 绘制
+  var drawn = {};
+  cfg.groups.forEach(function(g) {
+    for (var dq=-cfg.outer; dq<=cfg.outer; dq++) {
+      for (var dr=-cfg.outer; dr<=cfg.outer; dr++) {
+        if (hexRingD(dq,dr)>cfg.outer) continue;
+        var q=g.q+dq, r=g.r+dr;
+        var k2 = q+','+r;
+        if (drawn[k2]) continue;
+        drawn[k2] = 1;
+        var p = hexPos(q, r);
+        var info = occupied[k2];
+        if (info) {
+          var hex1 = makeHex(hexMat(info.kind));
+          hex1.position.set(p.x, 0.08, p.z);
+          root.add(hex1);
+          var dev = makeDevice(info.kind);
+          dev.position.set(p.x, 0.25, p.z);
+          dev.userData.q = q; dev.userData.r = r;
+          dev.userData.gi = info.gi;
+          dev.userData.isCenter = (info.kind==='center'||info.kind==='group');
+          if (info.kind==='center'||info.kind==='group') {
+            var col = info.kind==='center'?0xffaa55:0xd080ff;
+            for (var ri=1; ri<=3; ri++) {
+              var sr = signalRing(HEX*ri*1.0, col);
+              sr.position.set(p.x, 0.15, p.z);
+              root.add(sr);
+              signalRings.push(sr);
+            }
+          }
+          root.add(dev);
+        } else {
+          var hex2 = makeHex(hexMat('outer'), 0.95);
+          hex2.position.set(p.x, 0.05, p.z);
+          root.add(hex2);
+          var dot = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12,0.12,0.3,8),
+            new THREE.MeshStandardMaterial({color:0x6090c0, emissive:new THREE.Color(0x305878), emissiveIntensity:.15})
+          );
+          dot.position.set(p.x, 0.22, p.z); dot.castShadow = true;
+          root.add(dot);
+        }
+      }
+    }
+  });
+
+  // 尺寸标注
+  var bnd = calcBounds(cfg);
+  drawDimLines(cfg, bnd.w, bnd.h);
+
+  // UI 更新
+  var n = Object.keys(occupied).length;
+  document.getElementById('countLbl').textContent = n;
+  document.getElementById('groupLbl').textContent = cfg.groups.length;
+  var area = (n*2.6).toFixed(1);
+  document.getElementById('areaLbl').textContent = area + ' km²';
+  document.getElementById('priceLbl').textContent = (n*2).toLocaleString() + ' 万元';
+  document.getElementById('dimLbl').textContent = bnd.w.toFixed(0) + ' × ' + bnd.h.toFixed(0) + ' km';
+  document.getElementById('dimW').textContent = bnd.w.toFixed(1) + ' km';
+  document.getElementById('dimH').textContent = bnd.h.toFixed(1) + ' km';
+
+  var coordTxt = cfg.groups.map(function(g){return g.n+'('+g.q+','+g.r+')';}).join('  ');
+  var cp = document.getElementById('coords');
+  cp.innerHTML = '<b>布局坐标:</b> ' + coordTxt;
+  cp.style.display = '';
+
+  var dist = 50 + cfg.groups.length*14;
+  cam.position.set(dist*0.7, dist*0.65, dist*0.9);
+  ctrl.target.set(0,0,0);
+  ctrl.update();
+}
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1b2a);
+  scene.fog = new THREE.Fog(0x0d1b2a, 180, 600);
+
+  cam = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 2000);
+  cam.position.set(60, 50, 70);
+
+  rend = new THREE.WebGLRenderer({canvas:cvs, antialias:true});
+  rend.setPixelRatio(Math.min(devicePixelRatio,2));
+  rend.setSize(innerWidth, innerHeight);
+  rend.shadowMap.enabled = true;
+  rend.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  ctrl = new THREE.OrbitControls(cam, cvs);
+  ctrl.enableDamping = true; ctrl.dampingFactor = 0.08;
+
+  scene.add(new THREE.HemisphereLight(0xc0d8ff, 0x2a3820, 0.85));
+  var sun = new THREE.DirectionalLight(0xffffff, 1.0);
+  sun.position.set(80, 120, 60);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -300;
+  sun.shadow.camera.right = sun.shadow.camera.top = 300;
+  sun.shadow.bias = -0.0005;
+  scene.add(sun);
+
+  var ground = new THREE.Mesh(new THREE.PlaneGeometry(1500, 1500), new THREE.MeshStandardMaterial({color:0x1a3a2a, roughness:1}));
+  ground.rotation.x = -Math.PI/2; ground.position.y = -0.05; ground.receiveShadow = true;
+  scene.add(ground);
+  var grid = new THREE.GridHelper(800, 160, 0x2a4a2a, 0x1e3a1e); scene.add(grid);
+
+  root = new THREE.Group(); scene.add(root);
+  ray = new THREE.Raycaster();
+  pointer = new THREE.Vector2();
+
+  window.addEventListener('resize', function() {
+    cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix();
+    rend.setSize(innerWidth, innerHeight);
+  });
+
+  // 事件
+  cvs.addEventListener('pointerdown', onDown);
+  cvs.addEventListener('pointermove', onMove);
+  cvs.addEventListener('pointerup', onUp);
+
+  document.querySelectorAll('#topbar .btn[data-m]').forEach(function(b) {
+    b.addEventListener('click', function() {
+      document.querySelectorAll('#topbar .btn[data-m]').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      build(b.dataset.m);
+      var g = document.getElementById('calcGroups');
+      if (b.dataset.m==='1to6') { document.getElementById('calcMode').value='1to6'; g.value='1'; }
+      else if (b.dataset.m==='1to18') { document.getElementById('calcMode').value='1to18'; g.value='1'; }
+      else if (b.dataset.m==='3g') { g.value='3'; }
+      else if (b.dataset.m==='6g') { g.value='6'; }
+      else if (b.dataset.m==='9g') { g.value='9'; }
+      else if (b.dataset.m==='12g') { g.value='12'; }
+      else if (b.dataset.m==='20g') { g.value='20'; }
+      recalc();
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    for (var k in BACKUP) {
+      MODE[k].groups = BACKUP[k].groups.map(function(g){ return {q:g.q, r:g.r, n:g.n}; });
+    }
+    build(curMode);
+  });
+
+  document.getElementById('signalBtn').addEventListener('click', function() {
+    signalOn = !signalOn;
+    signalRings.forEach(function(s){ s.visible = signalOn; });
+    root.traverse(function(o) {
+      if (o.material && o.material.emissiveIntensity !== undefined && o.position.y > 2.5) {
+        o.material.emissiveIntensity = signalOn ? .35 : .05;
+      }
+    });
+    document.getElementById('signalBtn').textContent = signalOn ? '📡信号' : '📡信号(关)';
+  });
+
+  document.getElementById('calcMode').addEventListener('change', recalc);
+  document.getElementById('calcGroups').addEventListener('input', recalc);
+  document.getElementById('calcPrice').addEventListener('input', recalc);
+
+  build(curMode);
+  recalc();
+  loop();
+}
+
+function recalc() {
+  var mode = document.getElementById('calcMode').value;
+  var groups = Math.max(1, parseInt(document.getElementById('calcGroups').value)||1);
+  var price = Math.max(0, parseFloat(document.getElementById('calcPrice').value)||0);
+  var perGroup = mode==='1to6' ? 7 : 19;
+  var devices = groups * perGroup;
+  var areaKm2 = devices * 2.6;
+  var totalWan = devices * price;
+  var totalYuan = totalWan * 10000;
+  document.getElementById('resArea').textContent = areaKm2.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' km²';
+  document.getElementById('resDevices').textContent = devices.toLocaleString('zh-CN');
+  document.getElementById('resPrice').textContent = totalWan.toLocaleString('zh-CN',{minimumFractionDigits:1,maximumFractionDigits:1});
+  document.getElementById('resPriceYuan').textContent = '¥ ' + totalYuan.toLocaleString('zh-CN',{maximumFractionDigits:0});
+}
+
+function onDown(e) {
+  if (e.button !== 0) return;
+  var rect = cvs.getBoundingClientRect();
+  pointer.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  pointer.y = -((e.clientY-rect.top)/rect.height)*2+1;
+  ray.setFromCamera(pointer, cam);
+  var hits = ray.intersectObjects(root.children, true);
+  for (var i=0; i<hits.length; i++) {
+    var obj = hits[i].object;
+    while (obj && obj!==root && !obj.userData.isCenter) obj = obj.parent;
+    if (obj && obj.userData.isCenter) {
+      dragging = obj.userData.gi;
+      ctrl.enabled = false;
+      return;
+    }
+  }
+}
+
+function onUp(e) {
+  if (dragging===null) return;
+  var rect = cvs.getBoundingClientRect();
+  pointer.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  pointer.y = -((e.clientY-rect.top)/rect.height)*2+1;
+  ray.setFromCamera(pointer, cam);
+  var plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  var pt = new THREE.Vector3();
+  if (ray.ray.intersectPlane(plane, pt)) {
+    var rq = Math.round(pt.x/(HEX*1.5));
+    var rr = Math.round((pt.z/HEX - rq*Math.sqrt(3)/2)/Math.sqrt(3));
+    MODE[curMode].groups[dragging].q = rq;
+    MODE[curMode].groups[dragging].r = rr;
+    build(curMode);
+  }
+  dragging = null;
+  ctrl.enabled = true;
+}
+
+function onMove(e) {
+  if (dragging!==null) return;
+  var rect = cvs.getBoundingClientRect();
+  pointer.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  pointer.y = -((e.clientY-rect.top)/rect.height)*2+1;
+  ray.setFromCamera(pointer, cam);
+  var hits = ray.intersectObjects(root.children, true);
+  var found = false;
+  for (var i=0; i<hits.length; i++) {
+    var obj = hits[i].object;
+    while (obj && obj!==root && !obj.userData.isCenter) obj = obj.parent;
+    if (obj && obj.userData.isCenter) { found = true; break; }
+  }
+  cvs.style.cursor = found ? 'grab' : 'default';
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  var t = performance.now()*0.001;
+  signalRings.forEach(function(s, i) {
+    var k = Math.sin(t*1.5 + i*0.25);
+    s.scale.set(1+k*0.12, 1+k*0.12, 1);
+    s.material.opacity = 0.35 + (k*0.5+0.5)*0.45;
+  });
+  ctrl.update();
+  rend.render(scene, cam);
+}
+
+if (typeof THREE === 'undefined') {
+  document.body.innerHTML = '<div style="padding:50px;color:#ffb080;font-family:sans-serif;">ERROR: lib/three.min.js 未加载<br>请确认 lib/ 目录下有三个.js文件</div>';
+} else if (!THREE.OrbitControls) {
+  document.body.innerHTML = '<div style="padding:50px;color:#ffb080;font-family:sans-serif;">ERROR: lib/OrbitControls.js 未加载</div>';
+} else {
+  init();
+}
+</script>
+</body>
+</html>
